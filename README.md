@@ -1,5 +1,7 @@
 # 🚀 RR_CareerAI - India's Smart Career Roadmap & Risk Analyzer
 
+Live Demo: [https://rr-career-ai.vercel.app/]
+
 **CareerAI** is a modern, AI-powered career guidance platform specifically tailored for the Indian job market. It helps students and professionals navigate the rapidly changing landscape of work by providing data-driven roadmaps, AI risk assessments, and career comparisons.
 
 ## ✨ Key Features
