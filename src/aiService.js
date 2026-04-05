@@ -1,8 +1,8 @@
-const MODEL = 'llama-3.3-70b-versatile'; 
+const MODEL = 'llama-3.3-70b-versatile';
 
 async function callAI(systemPrompt, userMessage) {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error("Missing Groq API key in .env file");
   }
@@ -19,7 +19,6 @@ async function callAI(systemPrompt, userMessage) {
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage }
       ],
-      // This ensures the model returns valid JSON
       response_format: { type: "json_object" },
       temperature: 0.7
     }),
@@ -33,18 +32,29 @@ async function callAI(systemPrompt, userMessage) {
   const data = await res.json();
   const rawText = data.choices[0].message.content;
 
+  let parsed;
   try {
-    return JSON.parse(rawText);
+    parsed = JSON.parse(rawText);
   } catch {
     console.error("JSON Parse Error. Raw content:", rawText);
     throw new Error("The AI returned an invalid format. Please try again.");
   }
+
+
+  if (parsed.invalid) {
+    throw new Error(parsed.reason || "Please enter a valid input.");
+  }
+
+  return parsed;
 }
 
 // ── Career Analysis ──────────────────────────────────────────────────────────
 export async function analyzeCareer(formData) {
   const systemPrompt = `You are CareerAI, an expert career counselor specializing in the Indian job market.
 You MUST respond with ONLY a valid JSON object. Absolutely no text before or after the JSON. No markdown. No code fences. Just the raw JSON.
+
+IMPORTANT: If the current role or target career contains gibberish, random characters, or words that are not real roles or careers (e.g. "dlfgvnr", "wjnvs", "xyzabc"), respond with exactly:
+{"invalid": true, "reason": "Please enter a valid role or career name — for example, Software Engineer or Data Scientist."}
 
 The JSON must have exactly this structure:
 {
@@ -107,13 +117,16 @@ Main Goal: ${formData.goals || 'Not specified'}
 
 Give 5-7 roadmap steps, 6-8 AI risk tasks, exactly 3 pros, exactly 3 cons, and 2 myths. Use INR salary ranges. Be specific and actionable.`
 
-  return callAI(systemPrompt, userMessage, 4000)
+  return callAI(systemPrompt, userMessage)
 }
 
 // ── Job AI Risk Analysis ─────────────────────────────────────────────────────
 export async function analyzeJobRisk(jobData) {
   const systemPrompt = `You are CareerAI's AI Risk Analyzer.
 You MUST respond with ONLY a valid JSON object. No text before or after. No markdown. No code fences.
+
+IMPORTANT: If the job title is gibberish or not a real job (e.g. "dlfgvnr", "xyzabc", random letters), respond with exactly:
+{"invalid": true, "reason": "Please enter a valid job title — for example, Data Analyst or Marketing Manager."}
 
 The JSON must have exactly this structure:
 {
@@ -148,13 +161,15 @@ Current Skills: ${jobData.skills || 'Not specified'}
 
 Give 7-10 tasks, 3 alternative careers, 4-5 action plan items. Be honest and data-driven.`
 
-  return callAI(systemPrompt, userMessage, 3000)
+  return callAI(systemPrompt, userMessage)
 }
 
-// ── Career Comparison ────────────────────────────────────────────────────────
 export async function compareCareers(career1, career2) {
   const systemPrompt = `You are CareerAI. Compare two careers for Indian professionals.
 You MUST respond with ONLY a valid JSON object. No text before or after. No markdown. No code fences.
+
+IMPORTANT: If either career name is gibberish or not a real career, respond with exactly:
+{"invalid": true, "reason": "Please enter valid career names — for example, Software Engineer or Product Manager."}
 
 The JSON must have exactly this structure:
 {
@@ -185,13 +200,15 @@ The JSON must have exactly this structure:
 
   const userMessage = `Compare "${career1}" vs "${career2}" for the Indian job market. Respond with ONLY the JSON.`
 
-  return callAI(systemPrompt, userMessage, 2000)
+  return callAI(systemPrompt, userMessage)
 }
 
-// ── Personalized Suggestions ─────────────────────────────────────────────────
 export async function getSuggestions(profile) {
   const systemPrompt = `You are CareerAI. Suggest the best career matches for a person.
 You MUST respond with ONLY a valid JSON object. No text before or after. No markdown. No code fences.
+
+IMPORTANT: If the background or interests are complete gibberish or random characters with no real meaning, respond with exactly:
+{"invalid": true, "reason": "Please describe yourself properly so we can find the right careers for you."}
 
 The JSON must have exactly this structure:
 {
@@ -221,5 +238,5 @@ Education: ${profile.education || 'Not specified'}
 
 Focus on Indian market. Use INR salaries. tag must be one of: Best Match, Safe from AI, High Growth, Creative, Stable`
 
-  return callAI(systemPrompt, userMessage, 2000)
+  return callAI(systemPrompt, userMessage)
 }
