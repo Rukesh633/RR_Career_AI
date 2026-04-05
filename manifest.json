@@ -1,0 +1,24 @@
+{
+  "name": "CareerAI — Career Intelligence Platform",
+  "short_name": "CareerAI",
+  "description": "Free AI-powered career roadmaps, skill gap analysis and AI automation risk insights.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06090f",
+  "theme_color": "#06090f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/RR_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/RR_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
