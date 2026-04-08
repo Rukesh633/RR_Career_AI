@@ -557,9 +557,13 @@ function SkillsTab({ skills }) {
           gap: "18px",
         }}
       >
+        {/* Skills to Learn — spans full width on both desktop and mobile */}
         <div
           className="glass"
-          style={{ padding: "26px", gridColumn: "span 2" }}
+          style={{
+            padding: "26px",
+            gridColumn: "1 / -1", // always spans ALL available columns
+          }}
         >
           <div
             style={{

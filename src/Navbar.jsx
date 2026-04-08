@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const NAV_LINKS = [
   { id: "home", label: "Home" },
@@ -10,6 +10,34 @@ const NAV_LINKS = [
 
 export default function Navbar({ page, navigate }) {
   const [open, setOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  // Capture the browser's install prompt event
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault(); // Stop the default mini-infobar
+      setInstallPrompt(e); // Save it so we can trigger it on button click
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+
+    // If already installed (running as standalone PWA), hide the button
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      setIsInstalled(true);
+    }
+
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt(); // Show the OS-level install popup
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") {
+      setInstallPrompt(null); // Hide button after install
+      setIsInstalled(true);
+    }
+  };
 
   return (
     <>
@@ -235,6 +263,59 @@ export default function Navbar({ page, navigate }) {
             >
               Get Started Free
             </button>
+
+            {/* PWA Install button — only shown when browser supports it and app isn't installed */}
+            {installPrompt && !isInstalled && (
+              <button
+                onClick={() => {
+                  handleInstall();
+                  setOpen(false);
+                }}
+                style={{
+                  marginTop: "10px",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  padding: "13px",
+                  borderRadius: "var(--radius-sm)",
+                  border: "1px solid rgba(0,201,167,0.35)",
+                  background: "rgba(0,201,167,0.08)",
+                  color: "var(--accent-2)",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(0,201,167,0.15)";
+                  e.currentTarget.style.borderColor = "rgba(0,201,167,0.6)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(0,201,167,0.08)";
+                  e.currentTarget.style.borderColor = "rgba(0,201,167,0.35)";
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 2v8M5 7l3 3 3-3"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M3 11v1a1 1 0 001 1h8a1 1 0 001-1v-1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                Install App
+              </button>
+            )}
           </div>
         )}
       </nav>
